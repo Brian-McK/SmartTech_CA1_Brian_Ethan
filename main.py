@@ -19,6 +19,13 @@ from keras.models import Model
 import pickle
 import pandas as pd
 
+# directories & files paths
+test_directory = "tiny-imagenet-200/test"
+train_directory = "tiny-imagenet-200/train"
+val_directory = "tiny-imagenet-200/val"
+wnids_file = "tiny-imagenet-200/wnids.txt"
+words_file = "tiny-imagenet-200/words.txt"
+
 
 # process grey scale
 def grey_scale(img):
