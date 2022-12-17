@@ -18,3 +18,30 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Model
 import pickle
 import pandas as pd
+
+
+# process grey scale
+def grey_scale(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return img
+
+
+# process gaussian blur
+def gaussian_blur(img):
+    img = cv2.GaussianBlur(img, (5, 5), 0)
+    return img
+
+
+# process equaliser
+def equalise(img):
+    img = cv2.equalizeHist(img)
+    return img
+
+
+# combine processes
+def pre_process_img(img):
+    img = grey_scale(img)
+    img = gaussian_blur(img)
+    img = equalise(img)
+    img = img / 255
+    return img
