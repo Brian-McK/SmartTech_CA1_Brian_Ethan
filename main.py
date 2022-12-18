@@ -94,6 +94,7 @@ def get_id_dictionary():
     return id_dict
 
 
+# get class to id
 def get_class_to_id_dict():
     id_dict = get_id_dictionary()
     all_classes = {}
@@ -106,6 +107,7 @@ def get_class_to_id_dict():
     return result
 
 
+# get the data using the id
 def get_data(id_dict):
     print('starting loading data')
     train_data, test_data = [], []
@@ -117,6 +119,7 @@ def get_data(id_dict):
         train_labels_ = np.array([[0] * NUM_CLASSES] * NUM_IMAGES_PER_CLASS)
         train_labels_[:, value] = 1
         train_labels += train_labels_.tolist()
+        print('loading')
 
     for line in open(val_directory + '/val_annotations.txt'):
         img_name, class_id = line.split('\t')[:2]
@@ -124,11 +127,12 @@ def get_data(id_dict):
         test_labels_ = np.array([[0] * NUM_CLASSES])
         test_labels_[0, id_dict[class_id]] = 1
         test_labels += test_labels_.tolist()
+        print('loading')
 
     print('finished loading data, in {} seconds'.format(time.time() - t))
     return np.array(train_data), np.array(train_labels), np.array(test_data), np.array(test_labels)
 
-
+# keep getting errors about the shape of the data, I tried changing the shape using np.reshape but couldn't get it working
 train_data, train_labels, test_data, test_labels = get_data(get_id_dictionary())
 
 train_data = np.array(list(map(pre_process_img, train_data)))
