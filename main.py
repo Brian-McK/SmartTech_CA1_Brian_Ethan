@@ -83,6 +83,7 @@ def get_image(data_dir):
     image_arr = np.array(images)
     return image_arr
 
+#load the images from the file with the file path parameter
 def get_image_size(data_dir):
     onlyfiles = [f for f in listdir(data_dir) if isfile(join(data_dir, f))]
     images= np.empty(len(onlyfiles), dtype=object)
