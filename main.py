@@ -161,7 +161,7 @@ train_data = os.path.join(validation_data_dir2,'val_annotations.txt')
 
 train_txt_data = []
 y_labels =[]
-train_files = get_load_train_file(dat_dir2)
+
 # t = time.time()
 # for key, value in get_id_dictionary(dat_dir).items():
 #     y_labels = np.array([0]*200*500)
