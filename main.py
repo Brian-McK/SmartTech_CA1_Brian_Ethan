@@ -69,7 +69,7 @@ def pre_process_img(img):
 # *    Code version: 1.0
 # *    Availability: https://github.com/sonugiri1043/Train_ResNet_On_Tiny_ImageNet
 # ***************************************************************************************/
-# (Version 2.0) [Source code]. https://github.com/sonugiri1043/Train_ResNet_On_Tiny_ImageNet/blob/master/Train_ResNet_On_Tiny_ImageNet.ipynb
+# (Version 1.0) [Source code]. https://github.com/sonugiri1043/Train_ResNet_On_Tiny_ImageNet/blob/master/Train_ResNet_On_Tiny_ImageNet.ipynb
 
 
 # get class ids from text file
@@ -124,14 +124,26 @@ assert (train_data.shape[0] == train_labels.shape[
     0]), "The training set does not have the same number of data points and labels"
 assert (train_data.shape[0] == train_labels.shape[0]), "The test set does not have the same number of data points and labels"
 
+
+# test image display
 displayImage = train_data[0]
 plt.imshow(displayImage)
 plt.axis("off")
 plt.show()
 
-# print(img.shape)
-#
-# print("train data shape: ", train_data.shape)
-# print("train label shape: ", train_labels.shape)
-# print("test data shape: ", test_data.shape)
-# print("test_labels.shape: ", test_labels.shape)
+print(displayImage.shape)
+
+# print out shapes
+print("train data shape: ", train_data.shape)
+print("train label shape: ", train_labels.shape)
+print("test data shape: ", test_data.shape)
+print("test labels.shape: ", test_labels.shape)
+
+# Generate data augmentation and fit it to the training data
+datagen = ImageDataGenerator(width_shift_range=0.1, height_shift_range=0.1, zoom_range=0.2, shear_range=0.1,
+                             rotation_range=10)
+datagen.fit(train_data)
+
+# One-hot encode labels
+train_labels = to_categorical(train_labels, NUM_CLASSES)
+test_labels = to_categorical(test_labels, NUM_CLASSES)
