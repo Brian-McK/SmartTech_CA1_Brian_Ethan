@@ -92,29 +92,6 @@ def get_image_size(data_dir):
     return images
 
 
-def get_load_train_file(file_directory):
-    entries = os.listdir(file_directory)
-    train_data_files_name = []
-    for entry in entries:
-        train_data_files_name.append(entry)
-    train_files_np = np.array(train_data_files_name)
-    return train_files_np
-
-def get_image2(train_dir,file_dir):
-    images = []
-    for files in file_dir:
-        file_paths = train_dir+'\\'+files+'\\'+'images'
-        im = get_image(file_paths)
-        for i in im:
-            images.append(i)
-    image_arr = np.array(images)
-    return image_arr
-
-def get_data(filename):
-    excelfilereader=pd.read_csv(filename, index_col=None , header=None,skiprows = 1)
-    class_name = excelfilereader.iloc[:,1].values.tolist()
-    classes_name = np.array(class_name)
-    return classes_name
 
 
 def get_id_dictionary(path):
