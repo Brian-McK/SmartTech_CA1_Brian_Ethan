@@ -25,13 +25,27 @@ NUM_CLASSES = 200
 NUM_IMAGES_PER_CLASS = 500
 IMG_SIZE = 64
 
-
 # directories & files paths
 test_directory = "tiny-imagenet-200/test"
 train_directory = "tiny-imagenet-200/train"
 val_directory = "tiny-imagenet-200/val"
 wnids_file = "tiny-imagenet-200/wnids.txt"
 words_file = "tiny-imagenet-200/words.txt"
+
+
+# create the leNet model function
+def le_net_model():
+    model = Sequential()
+    model.add(Conv2D(60, (5, 5), input_shape=(64, 64, 1), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(30, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Flatten())
+    model.add(Dense(500, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(NUM_CLASSES, activation='softmax'))
+    model.compile(Adam(lr=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
 
 
 # process grey scale
@@ -122,8 +136,8 @@ test_data = np.array(list(map(pre_process_img, test_data)))
 
 assert (train_data.shape[0] == train_labels.shape[
     0]), "The training set does not have the same number of data points and labels"
-assert (train_data.shape[0] == train_labels.shape[0]), "The test set does not have the same number of data points and labels"
-
+assert (train_data.shape[0] == train_labels.shape[
+    0]), "The test set does not have the same number of data points and labels"
 
 # test image display
 displayImage = train_data[0]
@@ -147,3 +161,24 @@ datagen.fit(train_data)
 # One-hot encode labels
 train_labels = to_categorical(train_labels, NUM_CLASSES)
 test_labels = to_categorical(test_labels, NUM_CLASSES)
+
+
+# call the model and get model summary
+model = le_net_model()
+print(model.summary())
+
+
+# Train the model and evaluate its performance
+h = model.fit(datagen.flow(train_data, train_labels, batch_size=50), steps_per_epoch=train_data.shape[0] / 50, epochs=20,
+              validation_data=(validation_data, validation_labels), verbose=1, shuffle=1)
+plt.plot(h.history['accuracy'])
+plt.plot(h.history['val_accuracy'])
+plt.title('Accuracy')
+plt.xlabel('epoch')
+plt.show()
+
+
+# Output the test score and test accuracy
+score = model.evaluate(test_data, test_labels, verbose=1)
+print('Test score: ', score[0])
+print('Test accuracy: ', score[1])
