@@ -1,3 +1,7 @@
+import csv
+import time
+
+import imageio
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -42,57 +46,35 @@ def preprocess(img):
     return img
 
 
-# def le_net_model():
-#     model = Sequential()
-#     model.add(Conv2D(90, (5, 5), input_shape=(64, 64, 1), activation='relu'))
-#     model.add(MaxPooling2D(pool_size=(2, 2)))
-#     model.add(Conv2D(90, (3, 3), activation='relu'))
-#     model.add(MaxPooling2D(pool_size=(2, 2)))
-#     model.add(Flatten())
-#     model.add(Dense(500, activation='relu'))
-#     model.add(Dropout(0.5))
-#     model.add(Dense(num_classes, activation='softmax'))
-#     model.compile(Adam(lr=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
-#     return model
-#
-# def modified_model():
-#     model = Sequential()
-#     model.add(Conv2D(90, (5, 5), input_shape=(64, 64, 1), activation='relu'))
-#     model.add(Conv2D(9, (5, 5), activation='relu'))
-#     model.add(MaxPooling2D(pool_size=(2, 2)))
-#     model.add(Conv2D(60, (3, 3), activation='relu'))
-#     model.add(Conv2D(60, (3, 3), activation='relu'))
-#     model.add(MaxPooling2D(pool_size=(2, 2)))
-#     # model.add(Dropout(0.5))
-#     model.add(Flatten())
-#     model.add(Dense(500, activation='relu'))
-#     model.add(Dropout(0.5))
-#     model.add(Dense(num_classes, activation='softmax'))
-#     model.compile(Adam(lr=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
-#     return model
+def le_net_model():
+    model = Sequential()
+    model.add(Conv2D(60, (5, 5), input_shape=(64, 64, 1), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(30, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Flatten())
+    model.add(Dense(500, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation='softmax'))
+    model.compile(Adam(lr=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
 
-# def path_leaf(path):
-#    head, tail = ntpath.split(path)
-#    return tail
+def modified_model():
+    model = Sequential()
+    model.add(Conv2D(60, (5, 5), input_shape=(64, 64, 1), activation='relu'))
+    model.add(Conv2D(60, (5, 5), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(30, (3, 3), activation='relu'))
+    model.add(Conv2D(30, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Flatten())
+    model.add(Dense(50, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(200, activation='softmax'))
+    model.compile(Adam(lr=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
 
-
-# def input_model_function(filename):
-#     csv_filename =[filename]
-#     dataset = tf.data.TextLineDataset(csv_filename)
-#     dataset = dataset.map(_parse_function)
-#     dataset = dataset.batch(20)# you can use any number of batching
-#     iterator = dataset.make_one_shot_iterator()
-#     sess = tf.Session()
-#     batch_images, batch_labels = sess.run(iterator.get_next())
-#     return {'x':batch_images}, batch_labels
-#
-# def _parse_function(line):
-#     image, labels= tf.decode_csv(line,record_defaults=[[""], [0]])
-#     # Decode the raw bytes so it becomes a tensor with type.
-#     image = imread(image)# give full path name of image
-#     return image, labels
-
-
+#load the images from the file
 def get_image(data_dir):
     onlyfiles = [f for f in listdir(data_dir) if isfile(join(data_dir, f))]
     images = []
@@ -127,35 +109,101 @@ def get_image2(train_dir,file_dir):
     image_arr = np.array(images)
     return image_arr
 
+def get_data(filename):
+    excelfilereader=pd.read_csv(filename, index_col=None , header=None,skiprows = 1)
+    class_name = excelfilereader.iloc[:,1].values.tolist()
+    classes_name = np.array(class_name)
+    return classes_name
 
+
+def get_id_dictionary(path):
+    id_dict = {}
+    for i, line in enumerate(open(path + 'wnids.txt', 'r')):
+        id_dict[line.replace('\n', '')] = i
+    return id_dict
+
+
+def get_class_to_id_dict(path):
+    id_dict = get_id_dictionary(path)
+    all_classes = {}
+    result = {}
+    for i, line in enumerate(open(path + 'words.txt', 'r')):
+        n_id, word = line.split('\t')[:2]
+        all_classes[n_id] = word
+    for key, value in id_dict.items():
+        result[value] = (key, all_classes[key])
+    return result
+
+def get_data(id_dict,path):
+    print('starting loading data')
+    X_train, X_valid = [], []
+    y_train, y_valid = [], []
+    t = time.time()
+    for key, value in id_dict.items():
+        X_train += [imageio.imread(path + 'train\\{}\\images\\{}_{}.JPEG'.format(key, key, str(i)), pilmode='RGB') for i in
+                       range(500)]
+        train_labels_ = np.array([[0] * 200] * 500)
+        train_labels_[:, value] = 1
+        y_train += train_labels_.tolist()
+
+    for line in open(path + 'val\\val_annotations.txt'):
+        img_name, class_id = line.split('\t')[:2]
+        X_valid.append(imageio.imread(path + 'val\\images\\{}'.format(img_name), pilmode='RGB'))
+        test_labels_ = np.array([[0] * 200])
+        test_labels_[0, id_dict[class_id]] = 1
+        y_valid += test_labels_.tolist()
+
+    print('finished loading data, in {} seconds'.format(time.time() - t))
+    return np.array(X_train), np.array(y_train), np.array(X_valid), np.array(y_valid)
 
 train_data_dir = "D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\train\\n01443537\\images"
 validation_data_dir = "D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\val\\images"
+validation_data_dir2 = "D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\val"
 test_data_dir = "D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\test\\images"
-dat_dir = "D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200"
+dat_dir = "D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\"
 dat_dir2 = "D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\train"
 
 
 wnids_data = os.path.join(dat_dir, 'wnids.txt')
 words_data = os.path.join(dat_dir, 'words.txt')
 
+X_train, y_train,X_val, y_val = get_data(get_id_dictionary(dat_dir),dat_dir)
+
+# validation_data = os.path.join(validation_data_dir2,'val_annotations.txt')
+# validation_txt = pd.read_csv(validation_data,sep="\t", header=None)
+# validation_txt.columns =['Images', 'Class', 'Pixels', 'Pixels2', 'Pixels3', 'Pixels4']
+# print(validation_txt)
+# validation_txt.to_csv (r'D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\val\\val.csv', index=None)
+
+train_data = os.path.join(validation_data_dir2,'val_annotations.txt')
+# validation_txt = pd.read_csv(validation_data,sep="\t", header=None)
+# validation_txt.columns =['Images', 'Class', 'Pixels', 'Pixels2', 'Pixels3', 'Pixels4']
+# print(validation_txt)
+# validation_txt.to_csv (r'D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\val\\val.csv', index=None)
 
 train_txt_data = []
+y_labels =[]
 train_files = get_load_train_file(dat_dir2)
-for file in train_files:
-    file_path = dat_dir2+'\\'+file+'\\'+file+'_boxes.txt'
-    with open(file_path) as fp:
-        line = fp.readline()
-        cnt = 1
-        while line:
-            # print("Line {}: {}".format(cnt, line.strip()))
-            line = fp.readline()
-            train_txt_data.append(line)
-            cnt += 1
-train_tx_data = np.array(train_txt_data)
+# t = time.time()
+# for key, value in get_id_dictionary(dat_dir).items():
+#     y_labels = np.array([0]*200*500)
+#     y_labels[:, value] = 1
+#     y_labels += y_labels.tolist()
+# for file in train_files:
+#     file_path = dat_dir2+'\\'+file+'\\'+file+'_boxes.txt'
+#     with open(file_path) as fp:
+#         line = fp.readline()
+#         cnt = 1
+#         while line:
+#             # print("Line {}: {}".format(cnt, line.strip()))
+#             line = fp.readline()
+#             train_txt_data.append(line)
+#             cnt += 1
+# train_tx_data = np.array(train_txt_data, dtype='<U9')
 
-X_train, y_train = get_image2(dat_dir2,train_files), train_tx_data
-X_val, y_val = get_image(validation_data_dir), get_image_size(validation_data_dir)
+filename = 'D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\val\\val.csv'
+
+
 X_test, y_test = get_image(test_data_dir), get_image_size(test_data_dir)
 
 print(X_train.shape)
@@ -165,41 +213,65 @@ print(y_val.shape)
 print(X_test.shape)
 print(y_test.shape)
 
-# read_file = pd.read_csv(r'C:\\Users\\admin\\Documents\\smart\\tiny-imagenet-200\\words.txt',index_col = False,sep="\t")
-# read_file.to_csv (r'C:\\Users\\admin\\Documents\\smart\\tiny-imagenet-200\\words.csv', index=None)
+# read_file = pd.read_csv(r'D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\words.txt',index_col = False,sep="\t")
+# read_file.to_csv (r'D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\words.csv', index=None)
 
 get_wnids_data = pd.read_csv(wnids_data, sep="\t", header=None)
 get_words_data = pd.read_csv(words_data,sep="\t", header=None)
-#
-print("data shape ",get_words_data.shape,type(get_words_data))
+
 
 data = pd.read_csv('D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\tiny-imagenet-200\\words.csv', header=None)
-print(data)
-
 
 assert(X_train.shape[0] == y_train.shape[0]), "The training set does not have the same number of data points and labels"
 assert(X_val.shape[0] == y_val.shape[0]), "The validation set does not have the same number of data points and labels"
 assert(X_test.shape[0] == y_test.shape[0]), "The test set does not have the same number of data points and labels"
 
-num_of_samples = []
-cols = 5
-num_classes = 10
-fig, axs = plt.subplots(nrows = num_classes, ncols=cols, figsize=(5, 50))
-fig.tight_layout()
-for i in range(cols):
 
-    for j, row in data.iterrows():
-        #print(y_train[j])
-        #print(row.get(1))
-        #y=y_train[j]
-        #print(y[0:9])
-        #x_selected = X_train[y_train[0:9] == row.get(0)]
-        x_selected = X_train[y_train == row]
-        # print("selected",x_selected)
-        axs[j][i].imshow(x_selected[random.randint(0, len(x_selected)-1), :, :], cmap = plt.get_cmap('gray'))
-        axs[j][i].axis('off')
-        if i==2:
-            axs[j][i].set_title(str(j))
-            num_of_samples.append(len(x_selected))
+X_train = np.array(list(map(preprocess, X_train)))
+X_val = np.array(list(map(preprocess, X_val)))
+X_test = np.array(list(map(preprocess, X_test)))
+
+X_train = X_train.reshape(100000, 64, 64, 1)
+X_val = X_val.reshape(10000, 64, 64, 1)
+X_test = X_test.reshape(10000, 64, 64, 1)
+
+
+
+datagen = ImageDataGenerator(width_shift_range=0.1, height_shift_range=0.1, zoom_range=0.2, shear_range=0.1, rotation_range=10)
+datagen.fit(X_train)
+
+test_datagen = ImageDataGenerator( rescale = 1.0/255. )
+
+
+
+# batches = datagen.flow(X_train, y_train, batch_size=20)
+# X_batch, y_batch = next(batches)
+# fig, axs = plt.subplots(1, 20, figsize=(20,5))
+# for i in range(20):
+#     axs[i].imshow(X_batch[i].reshape(32, 32))
+#     axs[i].axis("off")
+# plt.show()
+num_classes = 200
+
+
+# One hot encode all labels
+y_train = keras.utils.to_categorical(y_train, num_classes)
+y_val = to_categorical(y_val, num_classes)
+# y_test = to_categorical(y_test, num_classes)
+
+model = modified_model()
+print(model.summary())
+
+y_train = np.argmax(y_train,axis=1)
+
+# Train the model and evaluate its performance
+h = model.fit(datagen.flow(X_train, y_train, batch_size=500), steps_per_epoch=X_train.shape[0]/500, epochs=10, validation_data=(X_val, y_val),  verbose=1)
+plt.plot(h.history['accuracy'])
+plt.plot(h.history['val_accuracy'])
+plt.title('Accuracy')
+plt.xlabel('epoch')
 plt.show()
 
+# score = model.evaluate(X_test, y_test, verbose=1)
+# print('Test score: ', score[0])
+# print('Test accuracy: ', score[1])
