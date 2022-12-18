@@ -94,7 +94,7 @@ def get_image_size(data_dir):
 
 
 #get the values from the wnids.tst as the id of the class category
-def get_id_dictionary(path):
+def get_id_from_dictionary(path):
     id_dict = {}
     for i, line in enumerate(open(path + 'wnids.txt', 'r')):
         id_dict[line.replace('\n', '')] = i
@@ -102,7 +102,7 @@ def get_id_dictionary(path):
 
 #get the category name from the words.txt and put them into the relevant key id
 def get_class_to_id_dict(path):
-    id_dict = get_id_dictionary(path)
+    id_dict = get_id_from_dictionary(path)
     all_classes = {}
     result = {}
     for i, line in enumerate(open(path + 'words.txt', 'r')):
@@ -145,7 +145,7 @@ dat_dir2 = "D:\\OneDrive - Dundalk Institute of Technology\\Documents\\smart\\ti
 wnids_data = os.path.join(dat_dir, 'wnids.txt')
 words_data = os.path.join(dat_dir, 'words.txt')
 
-X_train, y_train,X_val, y_val = get_data(get_id_dictionary(dat_dir),dat_dir)
+X_train, y_train,X_val, y_val = get_data(get_id_from_dictionary(dat_dir),dat_dir)
 
 # validation_data = os.path.join(validation_data_dir2,'val_annotations.txt')
 # validation_txt = pd.read_csv(validation_data,sep="\t", header=None)
